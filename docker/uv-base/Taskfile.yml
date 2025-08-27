@@ -1,0 +1,28 @@
+version: '3'
+silent: true
+
+dotenv: ["../.env.prod"]
+
+vars:
+  DOCKER_URI: "{{.MULTIREGION}}-docker.pkg.dev/{{.PROJECT_ID}}/{{.ARTIFACT_REPOSITORY}}/{{.IMAGE_NAME}}:{{.IMAGE_TAG}}"
+  IMAGE_NAME: xyz
+  GCP_PROJECT: ${PROJECT_ID}
+  ARTIFACT_REGISTRY_NAME: repo
+  ARTIFACT_REGION: ${REGION}
+  VERSION: latest
+
+tasks:
+  docker-auth:
+    desc: "Configure Docker authentication for Artifact Registry"
+    cmds:
+      - gcloud auth configure-docker {{.MULTIREGION}}-docker.pkg.dev
+  build:
+    desc: "Build Docker image"
+    cmds:
+      - docker build -t {{.DOCKER_URI}} .
+  push:
+    desc: "Push Docker image to Artifact Registry"
+    cmds:
+      - docker push {{.DOCKER_URI}}
+  all:
+    deps: [build, push]
